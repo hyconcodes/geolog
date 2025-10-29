@@ -28,10 +28,46 @@
                     wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
             </flux:navlist.group>
 
+            @role('student')
+                <flux:navlist.group :heading="__('SIWES')" class="grid">
+                    @if(auth()->user()->ppa_location)
+                        <flux:navlist.item icon="chart-bar" :href="route('siwes.dashboard')"
+                            :current="request()->routeIs('siwes.dashboard')" wire:navigate>{{ __('SIWES Dashboard') }}
+                        </flux:navlist.item>
+                        <flux:navlist.item icon="plus-circle" :href="route('siwes.log-activity')"
+                            :current="request()->routeIs('siwes.log-activity')" wire:navigate>{{ __('Log Activity') }}
+                        </flux:navlist.item>
+                        <flux:navlist.item icon="clock" :href="route('siwes.activity-history')"
+                            :current="request()->routeIs('siwes.activity-history')" wire:navigate>{{ __('Activity History') }}
+                        </flux:navlist.item>
+                        @if(now()->dayOfWeek === 6)
+                            <flux:navlist.item icon="document-text" :href="route('siwes.weekly-summary')"
+                                :current="request()->routeIs('siwes.weekly-summary')" wire:navigate>{{ __('Weekly Summary') }}
+                            </flux:navlist.item>
+                        @endif
+                    @else
+                        <flux:navlist.item icon="map-pin" :href="route('siwes.ppa-setup')"
+                            :current="request()->routeIs('siwes.ppa-setup')" wire:navigate>{{ __('PPA Setup') }}
+                        </flux:navlist.item>
+                    @endif
+                </flux:navlist.group>
+            @endrole
+
+            @role('supervisor')
+                <flux:navlist.group :heading="__('SIWES')" class="grid">
+                    <flux:navlist.item icon="check-circle" :href="route('supervisor.siwes-approvals')"
+                        :current="request()->routeIs('supervisor.siwes-approvals')" wire:navigate>{{ __('SIWES Approvals') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="users" :href="route('supervisor.students')"
+                        :current="request()->routeIs('supervisor.students')" wire:navigate>{{ __('My Students') }}
+                    </flux:navlist.item>
+                </flux:navlist.group>
+            @endrole
+
             @role('superadmin')
                 <flux:navlist.group :heading="__('Administration')" class="grid">
                     <flux:navlist.item icon="user-group" :href="route('admin.roles')"
-                        :current="request()->routeIs('admin.roles')" wire:navigate>{{ __('Role Management') }}
+                        :current="request()->routeIs('admin.roles')" wire:navigate>{{ __('Role & Permission') }}
                     </flux:navlist.item>
                     <flux:navlist.item icon="users" :href="route('admin.accounts')"
                         :current="request()->routeIs('admin.accounts')" wire:navigate>{{ __('Account Management') }}
@@ -40,7 +76,7 @@
                         :current="request()->routeIs('admin.supervisors')" wire:navigate>{{ __('Supervisor Management') }}
                     </flux:navlist.item>
                     <flux:navlist.item icon="building-office" :href="route('admin.departments')"
-                        :current="request()->routeIs('admin.departments')" wire:navigate>{{ __('Department Management') }}
+                        :current="request()->routeIs('admin.departments')" wire:navigate>{{ __('Department') }}
                     </flux:navlist.item>
                 </flux:navlist.group>
             @endrole

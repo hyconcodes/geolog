@@ -59,6 +59,21 @@ Route::middleware(['auth'])->group(function () {
         ->name('two-factor.show');
 });
 
+// SIWES routes for students
+Route::middleware(['auth', 'role:student'])->prefix('siwes')->name('siwes.')->group(function () {
+    Volt::route('ppa-setup', 'siwes.ppa-setup')->name('ppa-setup');
+    Volt::route('dashboard', 'siwes.dashboard')->name('dashboard');
+    Volt::route('log-activity', 'siwes.log-activity')->name('log-activity');
+    Volt::route('weekly-summary', 'siwes.weekly-summary')->name('weekly-summary');
+    Volt::route('activity-history', 'siwes.activity-history')->name('activity-history');
+});
+
+// SIWES routes for supervisors
+Route::middleware(['auth', 'role:supervisor'])->prefix('supervisor')->name('supervisor.')->group(function () {
+    Volt::route('siwes-approvals', 'supervisor.siwes-approvals')->name('siwes-approvals');
+    Volt::route('students', 'supervisor.students')->name('students');
+});
+
 // Admin routes
 Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')->group(function () {
     Volt::route('roles', 'admin.role-management')->name('roles');

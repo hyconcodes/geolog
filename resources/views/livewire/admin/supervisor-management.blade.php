@@ -7,15 +7,32 @@ use Livewire\WithPagination;
 new class extends Component {
     use WithPagination;
     
-    public $showBulkAssignModal = false;
+    public $showStudentsModal = false;
     public $selectedSupervisor = null;
-    public $selectedStudents = [];
-    public $searchTerm = '';
-    public $supervisorFilter = '';
+    public $supervisorStudents = [];
     
     public function mount()
     {
         // Authorization can be added here if needed
+    }
+    
+    public function viewStudents($supervisorId)
+    {
+        $this->selectedSupervisor = User::with(['students' => function ($query) {
+            $query->whereHas('roles', function ($q) {
+                $q->where('name', 'student');
+            });
+        }])->find($supervisorId);
+        
+        $this->supervisorStudents = $this->selectedSupervisor->students ?? [];
+        $this->showStudentsModal = true;
+    }
+    
+    public function closeStudentsModal()
+    {
+        $this->showStudentsModal = false;
+        $this->selectedSupervisor = null;
+        $this->supervisorStudents = [];
     }
     
     public function with()
@@ -28,113 +45,13 @@ new class extends Component {
             });
         }]);
 
-        if ($this->supervisorFilter) {
-            $supervisorsQuery->where('id', $this->supervisorFilter);
-        }
-
-        $studentsQuery = User::whereHas('roles', function ($query) {
-            $query->where('name', 'student');
-        })->with('supervisor');
-
-        if ($this->searchTerm) {
-            $studentsQuery->where(function ($query) {
-                $query->where('name', 'like', '%' . $this->searchTerm . '%')
-                      ->orWhere('email', 'like', '%' . $this->searchTerm . '%')
-                      ->orWhere('matric_no', 'like', '%' . $this->searchTerm . '%');
-            });
-        }
-
-        if ($this->supervisorFilter === 'unassigned') {
-            $studentsQuery->whereNull('supervisor_id');
-        } elseif ($this->supervisorFilter) {
-            $studentsQuery->where('supervisor_id', $this->supervisorFilter);
-        }
-
         // Get all supervisors for stats (not paginated)
         $allSupervisors = $supervisorsQuery->get();
 
         return [
             'supervisors' => $allSupervisors, // For stats and display
             'paginatedSupervisors' => $supervisorsQuery->paginate(10, ['*'], 'supervisors'), // For table pagination
-            'students' => $studentsQuery->paginate(15),
-            'unassignedStudents' => User::whereHas('roles', function ($query) {
-                $query->where('name', 'student');
-            })->whereNull('supervisor_id')->get(),
         ];
-    }
-    
-    public function openBulkAssignModal()
-    {
-        $this->showBulkAssignModal = true;
-        $this->selectedStudents = [];
-        $this->selectedSupervisor = null;
-    }
-    
-    public function closeBulkAssignModal()
-    {
-        $this->showBulkAssignModal = false;
-        $this->selectedStudents = [];
-        $this->selectedSupervisor = null;
-    }
-    
-    public function bulkAssignStudents()
-    {
-        $this->validate([
-            'selectedSupervisor' => 'required|exists:users,id',
-            'selectedStudents' => 'required|array|min:1',
-            'selectedStudents.*' => 'exists:users,id',
-        ]);
-        
-        $supervisor = User::findOrFail($this->selectedSupervisor);
-        $currentStudentCount = $supervisor->students()->whereHas('roles', function ($query) {
-            $query->where('name', 'student');
-        })->count();
-        
-        $availableSlots = 8 - $currentStudentCount;
-        
-        if (count($this->selectedStudents) > $availableSlots) {
-            session()->flash('error', "Supervisor can only take {$availableSlots} more students (currently has {$currentStudentCount}/8).");
-            return;
-        }
-        
-        User::whereIn('id', $this->selectedStudents)->update([
-            'supervisor_id' => $this->selectedSupervisor
-        ]);
-        
-        $this->closeBulkAssignModal();
-        session()->flash('message', 'Students assigned successfully!');
-    }
-    
-    public function assignStudent($studentId, $supervisorId)
-    {
-        $supervisor = User::findOrFail($supervisorId);
-        $currentStudentCount = $supervisor->students()->whereHas('roles', function ($query) {
-            $query->where('name', 'student');
-        })->count();
-        
-        if ($currentStudentCount >= 8) {
-            session()->flash('error', 'Supervisor already has maximum students (8/8).');
-            return;
-        }
-        
-        User::findOrFail($studentId)->update(['supervisor_id' => $supervisorId]);
-        session()->flash('message', 'Student assigned successfully!');
-    }
-    
-    public function unassignStudent($studentId)
-    {
-        User::findOrFail($studentId)->update(['supervisor_id' => null]);
-        session()->flash('message', 'Student unassigned successfully!');
-    }
-    
-    public function updatedSearchTerm()
-    {
-        $this->resetPage();
-    }
-    
-    public function updatedSupervisorFilter()
-    {
-        $this->resetPage();
     }
 }; ?>
 
@@ -142,12 +59,7 @@ new class extends Component {
     <div class="sm:flex sm:items-center">
         <div class="sm:flex-auto">
             <h1 class="text-base font-semibold leading-6 text-gray-900">Supervisor Management</h1>
-            <p class="mt-2 text-sm text-gray-700">Manage supervisor assignments and view student distributions.</p>
-        </div>
-        <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-            <button wire:click="openBulkAssignModal" type="button" class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                Bulk Assign Students
-            </button>
+            <p class="mt-2 text-sm text-gray-700">View supervisor information and student capacity.</p>
         </div>
     </div>
 
@@ -298,9 +210,6 @@ new class extends Component {
                                 Capacity
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Actions
                             </th>
                         </tr>
@@ -330,38 +239,28 @@ new class extends Component {
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                                            <div class="bg-indigo-600 h-2 rounded-full" 
-                                                 style="width: {{ ($supervisor->students_count / 8) * 100 }}%"></div>
+                                        <div class="flex-1 mr-3">
+                                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                                <div class="bg-indigo-600 h-2 rounded-full" 
+                                                     style="width: {{ min(($supervisor->students_count / 8) * 100, 100) }}%"></div>
+                                            </div>
                                         </div>
-                                        <span class="text-sm text-gray-600">{{ $supervisor->students_count }}/8</span>
+                                        <span class="text-sm text-gray-600 font-medium">{{ $supervisor->students_count }}/8</span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($supervisor->students_count >= 8)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            Full
-                                        </span>
-                                    @elseif($supervisor->students_count >= 6)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            Near Full
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Available
-                                        </span>
-                                    @endif
-                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button wire:click="$set('supervisorFilter', {{ $supervisor->id }})" 
-                                            class="text-indigo-600 hover:text-indigo-900 mr-3">
-                                        View Students
+                                    <button wire:click="viewStudents({{ $supervisor->id }})" 
+                                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-2.239"></path>
+                                        </svg>
+                                        View Students ({{ $supervisor->students_count }})
                                     </button>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
                                     No supervisors found.
                                 </td>
                             </tr>
@@ -377,161 +276,85 @@ new class extends Component {
         </div>
     </div>
 
-    <!-- Students Management -->
-    <div class="mt-8">
-        <div class="sm:flex sm:items-center">
-            <div class="sm:flex-auto">
-                <h2 class="text-lg font-medium text-gray-900">Students Management</h2>
-                <p class="mt-1 text-sm text-gray-700">{{ $unassignedStudents->count() }} unassigned students</p>
-            </div>
-        </div>
-
-        <!-- Filters -->
-        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-                <label for="search" class="block text-sm font-medium text-gray-700">Search Students</label>
-                <flux:input wire:model.live="searchTerm" type="text" id="search" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Search by name, email, or matric number..."/>
-            </div>
-            <div>
-                <label for="supervisor-filter" class="block text-sm font-medium text-gray-700">Filter by Supervisor</label>
-                <flux:select wire:model.live="supervisorFilter" id="supervisor-filter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <option value="">All Students</option>
-                    <option value="unassigned">Unassigned Only</option>
-                    @foreach ($supervisors as $supervisor)
-                        <option value="{{ $supervisor->id }}">{{ $supervisor->name }}</option>
-                    @endforeach
-                </flux:select>
-            </div>
-        </div>
-
-        <!-- Students Table -->
-        <div class="mt-6 flow-root">
-            <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                    <table class="min-w-full divide-y divide-gray-300">
-                        <thead>
-                            <tr>
-                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">Student</th>
-                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Matric Number</th>
-                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Current Supervisor</th>
-                                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0">
-                                    <span class="sr-only">Actions</span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            @forelse ($students as $student)
-                                <tr>
-                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-0">
-                                        <div class="flex items-center">
-                                            <div class="h-8 w-8 flex-shrink-0">
-                                                <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-                                                    <span class="text-xs font-medium text-gray-700">{{ substr($student->name, 0, 2) }}</span>
-                                                </div>
-                                            </div>
-                                            <div class="ml-4">
-                                                <div class="font-medium text-gray-900">{{ $student->name }}</div>
-                                                <div class="text-gray-500">{{ $student->email }}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                        {{ $student->matric_no ?? 'N/A' }}
-                                    </td>
-                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                        @if($student->supervisor)
-                                            <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                                                {{ $student->supervisor->name }}
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
-                                                Unassigned
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
-                                        @if($student->supervisor)
-                                            <button wire:click="unassignStudent({{ $student->id }})" class="text-red-600 hover:text-red-900 mr-3">
-                                                Unassign
-                                            </button>
-                                        @endif
-                                        <div class="inline-block">
-                                            <select wire:change="assignStudent({{ $student->id }}, $event.target.value)" class="rounded-md border-gray-300 text-sm">
-                                                <option value="">Assign to...</option>
-                                                @foreach ($supervisors->where('students_count', '<', 8) as $supervisor)
-                                                    <option value="{{ $supervisor->id }}">
-                                                        {{ $supervisor->name }} ({{ $supervisor->students_count }}/8)
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="px-3 py-4 text-sm text-gray-500 text-center">No students found.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pagination -->
-        <div class="mt-6">
-            {{ $students->links() }}
-        </div>
-    </div>
-
-    <!-- Bulk Assignment Modal -->
-    @if($showBulkAssignModal)
+    <!-- Students Modal -->
+    @if($showStudentsModal)
         <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div class="relative inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-                    <div>
+                <div class="relative inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full sm:p-6">
+                    <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                            Bulk Assign Students
+                            Students under {{ $selectedSupervisor?->name }}
                         </h3>
-                        <div class="mt-4">
-                            <label for="supervisor-select" class="block text-sm font-medium text-gray-700">Select Supervisor</label>
-                            <select wire:model="selectedSupervisor" id="supervisor-select" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <option value="">Choose a supervisor...</option>
-                                @foreach ($supervisors->where('students_count', '<', 8) as $supervisor)
-                                    <option value="{{ $supervisor->id }}">
-                                        {{ $supervisor->name }} ({{ $supervisor->students_count }}/8 students)
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700">Select Unassigned Students</label>
-                            <div class="mt-2 max-h-60 overflow-y-auto border border-gray-300 rounded-md">
-                                @foreach ($unassignedStudents as $student)
-                                    <label class="flex items-center p-3 hover:bg-gray-50">
-                                        <input wire:model="selectedStudents" type="checkbox" value="{{ $student->id }}" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                                        <div class="ml-3">
-                                            <div class="text-sm font-medium text-gray-900">{{ $student->name }}</div>
-                                            <div class="text-sm text-gray-500">{{ $student->email }}</div>
-                                        </div>
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                        <button wire:click="bulkAssignStudents" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm">
-                            Assign Students
+                        <button wire:click="closeStudentsModal" class="text-gray-400 hover:text-gray-600">
+                            <span class="sr-only">Close</span>
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                         </button>
-                        <button wire:click="closeBulkAssignModal" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">
-                            Cancel
+                    </div>
+                    
+                    @if(count($supervisorStudents) > 0)
+                        <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matric Number</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($supervisorStudents as $student)
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="flex-shrink-0 h-10 w-10">
+                                                        <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                                            <span class="text-sm font-medium text-gray-700">
+                                                                {{ strtoupper(substr($student->name, 0, 2)) }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">{{ $student->name }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ $student->email }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {{ $student->matric_no ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ $student->department?->name ?? 'N/A' }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="text-center py-8">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-2.239"></path>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No students assigned</h3>
+                            <p class="mt-1 text-sm text-gray-500">This supervisor doesn't have any students assigned yet.</p>
+                        </div>
+                    @endif
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button wire:click="closeStudentsModal" type="button" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
+                            Close
                         </button>
                     </div>
                 </div>
             </div>
         </div>
     @endif
+</div>
 </div>

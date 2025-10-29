@@ -1,5 +1,5 @@
 <x-layouts.auth>
-    <div class="flex flex-col gap-6">
+    {{-- <div class="flex flex-col gap-6">
         <x-auth-header :title="__('Create an account')" :description="__('Enter your details below to create your account')" />
 
         <!-- Session Status -->
@@ -61,5 +61,13 @@
             <span>{{ __('Already have an account?') }}</span>
             <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
         </div>
+    </div> --}}
+    <div class="flex flex-col gap-6">
+        <flux:button variant="primary" :href="route('student.register')" wire:navigate>
+            {{ __('Register as Student') }}
+        </flux:button>
+        <flux:button variant="primary" :href="route('supervisor.register')" wire:navigate>
+            {{ __('Register as Supervisor') }}
+        </flux:button>
     </div>
 </x-layouts.auth>

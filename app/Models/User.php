@@ -29,6 +29,13 @@ class User extends Authenticatable
         'status',
         'supervisor_id',
         'department_id',
+        'ppa_company_name',
+        'ppa_address',
+        'ppa_latitude',
+        'ppa_longitude',
+        'siwes_start_date',
+        'siwes_end_date',
+        'siwes_completed',
     ];
 
     /**
@@ -53,6 +60,11 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'ppa_latitude' => 'decimal:8',
+            'ppa_longitude' => 'decimal:8',
+            'siwes_start_date' => 'date',
+            'siwes_end_date' => 'date',
+            'siwes_completed' => 'boolean',
         ];
     }
 
@@ -178,5 +190,75 @@ class User extends Authenticatable
         return $query->whereHas('roles', function ($q) {
             $q->where('name', 'supervisor');
         });
+    }
+
+    /**
+     * Get the SIWES activity logs for this user
+     */
+    public function siwesActivityLogs()
+    {
+        return $this->hasMany(SiwesActivityLog::class);
+    }
+
+    /**
+     * Get approved SIWES activity logs
+     */
+    public function approvedSiwesLogs()
+    {
+        return $this->siwesActivityLogs()->approved();
+    }
+
+    /**
+     * Check if user has set up PPA location
+     */
+    public function hasPPALocation(): bool
+    {
+        return !is_null($this->ppa_latitude) && !is_null($this->ppa_longitude);
+    }
+
+    /**
+     * Check if SIWES has started for this user
+     */
+    public function hasSiwesStarted(): bool
+    {
+        return !is_null($this->siwes_start_date);
+    }
+
+    /**
+     * Get current SIWES week number
+     */
+    public function getCurrentSiwesWeek(): ?int
+    {
+        if (!$this->hasSiwesStarted()) {
+            return null;
+        }
+
+        return now()->diffInWeeks($this->siwes_start_date) + 1;
+    }
+
+    /**
+     * Check if SIWES period is still active (within 24 weeks)
+     */
+    public function isSiwesActive(): bool
+    {
+        if (!$this->hasSiwesStarted()) {
+            return false;
+        }
+
+        $currentWeek = $this->getCurrentSiwesWeek();
+        return $currentWeek <= 24 && !$this->siwes_completed;
+    }
+
+    /**
+     * Get remaining SIWES weeks
+     */
+    public function getRemainingWeeks(): int
+    {
+        if (!$this->hasSiwesStarted()) {
+            return 24;
+        }
+
+        $currentWeek = $this->getCurrentSiwesWeek();
+        return max(0, 24 - $currentWeek + 1);
     }
 }

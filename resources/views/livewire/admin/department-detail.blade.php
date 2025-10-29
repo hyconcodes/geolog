@@ -121,6 +121,22 @@ new class extends Component {
             return;
         }
 
+        // Check supervisor's current student count
+        $currentStudentCount = $supervisor->students()->count();
+        $studentsToAssign = count($this->selectedStudents);
+        $totalAfterAssignment = $currentStudentCount + $studentsToAssign;
+
+        // Enforce 8-student limit per supervisor
+        if ($totalAfterAssignment > 8) {
+            $availableSlots = 8 - $currentStudentCount;
+            if ($availableSlots <= 0) {
+                session()->flash('error', 'This supervisor already has the maximum of 8 students assigned.');
+            } else {
+                session()->flash('error', "This supervisor can only accept {$availableSlots} more student(s). You are trying to assign {$studentsToAssign} students.");
+            }
+            return;
+        }
+
         // Update selected students
         User::whereIn('id', $this->selectedStudents)
             ->where('department_id', $this->departmentId)
@@ -473,8 +489,15 @@ new class extends Component {
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="">Choose a supervisor...</option>
                             @foreach($allSupervisors as $supervisor)
-                                <option value="{{ $supervisor->id }}">
-                                    {{ $supervisor->name }} ({{ $supervisor->students()->count() }} students)
+                                @php
+                                    $currentCount = $supervisor->students()->count();
+                                    $isAtCapacity = $currentCount >= 8;
+                                    $availableSlots = 8 - $currentCount;
+                                @endphp
+                                <option value="{{ $supervisor->id }}" 
+                                        @if($isAtCapacity) disabled @endif>
+                                    {{ $supervisor->name }} 
+                                    ({{ $currentCount }}/8 students{{ $isAtCapacity ? ' - FULL' : ($availableSlots <= 2 ? ' - Almost Full' : '') }})
                                 </option>
                             @endforeach
                         </select>
