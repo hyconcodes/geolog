@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
+use Laravel\Fortify\Contracts\LoginResponse;
+use Illuminate\Http\RedirectResponse;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -29,6 +31,7 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+        $this->configureAuthentication();
     }
 
     /**
@@ -67,6 +70,30 @@ class FortifyServiceProvider extends ServiceProvider
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
 
             return Limit::perMinute(5)->by($throttleKey);
+        });
+    }
+
+    /**
+     * Configure authentication redirection.
+     */
+    private function configureAuthentication(): void
+    {
+        $this->app->instance(LoginResponse::class, new class implements LoginResponse {
+            public function toResponse($request): RedirectResponse
+            {
+                $user = auth()->user();
+                
+                if ($user->hasRole('superadmin')) {
+                    return redirect()->route('superadmin.dashboard');
+                } elseif ($user->hasRole('supervisor')) {
+                    return redirect()->route('supervisor.dashboard');
+                } elseif ($user->hasRole('student')) {
+                    return redirect()->route('student.dashboard');
+                }
+                
+                // Default fallback
+                return redirect()->route('dashboard');
+            }
         });
     }
 }

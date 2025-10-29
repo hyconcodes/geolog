@@ -3,14 +3,42 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SupervisorController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::view('dashboard', 'dashboard')
+// Student and Supervisor Registration Routes
+Route::get('student/register', [StudentController::class, 'showRegisterForm'])
+    ->middleware('guest')
+    ->name('student.register');
+Route::post('student/register', [StudentController::class, 'register'])
+    ->middleware('guest');
+Route::get('supervisor/register', [SupervisorController::class, 'showRegisterForm'])
+    ->middleware('guest')
+    ->name('supervisor.register');
+Route::post('supervisor/register', [SupervisorController::class, 'register'])
+    ->middleware('guest');
+
+// Dashboard Routes
+Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+Route::view('student/dashboard', 'student-dashboard')
+    ->middleware(['auth', 'verified', 'role:student'])
+    ->name('student.dashboard');
+
+Route::view('supervisor/dashboard', 'supervisor-dashboard')
+    ->middleware(['auth', 'verified', 'role:supervisor'])
+    ->name('supervisor.dashboard');
+
+Route::view('superadmin/dashboard', 'superadmin-dashboard')
+    ->middleware(['auth', 'verified', 'role:superadmin'])
+    ->name('superadmin.dashboard');
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
@@ -32,6 +60,6 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Admin routes
-Route::middleware(['auth', 'can:role.view'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'permission:role.view'])->prefix('admin')->name('admin.')->group(function () {
     Volt::route('roles', 'admin.role-management')->name('roles');
 });
