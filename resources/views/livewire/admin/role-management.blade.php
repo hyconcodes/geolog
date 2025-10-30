@@ -157,7 +157,7 @@ new class extends Component {
             <div class="hidden lg:block bg-zinc-50 dark:bg-zinc-700 px-4 sm:px-6 lg:px-8 py-4 lg:py-6 border-b border-zinc-200 dark:border-zinc-600">
                 <div class="grid grid-cols-4 gap-4 lg:gap-6 font-semibold text-zinc-700 dark:text-zinc-200 text-xs sm:text-sm uppercase tracking-wider">
                     <div>Role Name</div>
-                    <div>Permissions</div>
+                    {{-- <div>Permissions</div> --}}
                     <div>Created</div>
                     <div>Actions</div>
                 </div>
@@ -170,16 +170,16 @@ new class extends Component {
                 <div class="hidden lg:block px-4 sm:px-6 lg:px-8 py-4 lg:py-6 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors duration-200">
                     <div class="grid grid-cols-4 gap-4 lg:gap-6 items-center">
                         <div class="font-semibold text-zinc-900 dark:text-white capitalize">{{ $role->name }}</div>
-                        <div>
+                        {{-- <div>
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                                 {{ $role->permissions->count() }} permissions
                             </span>
-                        </div>
+                        </div> --}}
                         <div class="text-zinc-600 dark:text-zinc-300">{{ $role->created_at->format('M d, Y') }}</div>
                         <div class="flex space-x-2">
-                            <flux:button wire:click="managePermissions({{ $role->id }})" variant="primary" class="!bg-green-600 hover:!bg-green-700 !text-white text-sm">
+                            {{-- <flux:button wire:click="managePermissions({{ $role->id }})" variant="primary" class="!bg-green-600 hover:!bg-green-700 !text-white text-sm">
                                 Permissions
-                            </flux:button>
+                            </flux:button> --}}
                             <flux:button wire:click="editRole({{ $role->id }})" variant="primary" class="!bg-yellow-600 hover:!bg-yellow-700 !text-white text-sm">
                                 Edit
                             </flux:button>

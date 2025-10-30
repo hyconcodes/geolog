@@ -70,7 +70,7 @@
             @role('superadmin')
                 <flux:navlist.group :heading="__('Administration')" class="grid">
                     <flux:navlist.item icon="user-group" :href="route('admin.roles')"
-                        :current="request()->routeIs('admin.roles')" wire:navigate>{{ __('Role & Permission') }}
+                        :current="request()->routeIs('admin.roles')" wire:navigate>{{ __('Manage Roles') }}
                     </flux:navlist.item>
                     <flux:navlist.item icon="users" :href="route('admin.accounts')"
                         :current="request()->routeIs('admin.accounts')" wire:navigate>{{ __('Account Management') }}
