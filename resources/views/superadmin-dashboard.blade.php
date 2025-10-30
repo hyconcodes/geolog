@@ -101,6 +101,9 @@
                 </div>
             </div>
 
+            <!-- SIWES Control Panel -->
+            @livewire('siwes.siwes-control')
+
             <!-- Supervisor Capacity Overview -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                 @php

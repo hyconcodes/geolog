@@ -52,7 +52,7 @@ $pendingLogs = computed(function () {
               ->orWhere('backdate_reason', 'like', '%' . $this->search . '%')
               ->orWhereHas('user', function ($userQuery) {
                   $userQuery->where('name', 'like', '%' . $this->search . '%')
-                           ->orWhere('matric_number', 'like', '%' . $this->search . '%');
+                           ->orWhere('matric_no', 'like', '%' . $this->search . '%');
               });
         });
     }
@@ -273,7 +273,7 @@ $downloadDocument = function ($logId) {
                     >
                         <option value="">All Students</option>
                         @foreach($this->supervisedStudents as $student)
-                            <option value="{{ $student->id }}">{{ $student->name }} ({{ $student->matric_number }})</option>
+                            <option value="{{ $student->id }}">{{ $student->name }} ({{ $student->matric_no }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -304,7 +304,7 @@ $downloadDocument = function ($logId) {
                                                 {{ $log->user->name }}
                                             </span>
                                             <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                                                ({{ $log->user->matric_number }})
+                                                ({{ $log->user->matric_no }})
                                             </span>
                                         </div>
                                         

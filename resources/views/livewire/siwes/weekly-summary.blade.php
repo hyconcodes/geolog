@@ -2,6 +2,7 @@
 
 use function Livewire\Volt\{state, mount, computed, rules};
 use App\Models\SiwesActivityLog;
+use App\Models\SiwesSettings;
 use Carbon\Carbon;
 
 state([
@@ -23,6 +24,13 @@ rules([
 
 mount(function () {
     $this->user = auth()->user();
+    
+    // Check if superadmin has started SIWES
+    $siwesSettings = SiwesSettings::getInstance();
+    if (!$siwesSettings->is_active || !$siwesSettings->start_date) {
+        session()->flash('error', 'SIWES period has not been started by the administrator. Please contact your supervisor or administrator.');
+        return redirect()->route('dashboard');
+    }
     
     if (!$this->user->hasPPALocation()) {
         return redirect()->route('siwes.ppa-setup');

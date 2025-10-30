@@ -2,6 +2,7 @@
 
 use function Livewire\Volt\{state, mount, rules, computed, usesFileUploads};
 use App\Models\SiwesActivityLog;
+use App\Models\SiwesSettings;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
@@ -12,6 +13,7 @@ state([
     'activity_description' => '',
     'document' => null,
     'selected_date' => null,
+    'selected_week' => 1,
     'is_backdated' => false,
     'backdate_reason' => '',
     'current_latitude' => null,
@@ -27,6 +29,7 @@ rules([
     'activity_description' => 'required|string|min:10|max:2000',
     'document' => 'nullable|file|max:10240', // 10MB max
     'selected_date' => 'required|date|before_or_equal:today',
+    'selected_week' => 'required|integer|min:1|max:24',
     'backdate_reason' => 'required_if:is_backdated,true|string|max:500',
     'current_latitude' => 'required|numeric',
     'current_longitude' => 'required|numeric',
@@ -34,6 +37,13 @@ rules([
 
 mount(function () {
     $this->user = auth()->user();
+    
+    // Check if superadmin has started SIWES
+    $siwesSettings = SiwesSettings::getInstance();
+    if (!$siwesSettings->is_active || !$siwesSettings->start_date) {
+        session()->flash('error', 'SIWES period has not been started by the administrator. Please contact your supervisor or administrator.');
+        return redirect()->route('siwes.dashboard');
+    }
     
     if (!$this->user->hasPPALocation()) {
         return redirect()->route('siwes.ppa-setup');
@@ -45,6 +55,8 @@ mount(function () {
     }
     
     $this->selected_date = now()->toDateString();
+    $this->current_week = $this->user->getCurrentSiwesWeek() ?? 1;
+    $this->selected_week = $this->current_week; // Default to current week
     $this->checkIfBackdated();
     $this->calculateWeekAndDayType();
 });
@@ -132,12 +144,18 @@ $canLogForDate = computed(function () {
         return false;
     }
     
-    // Check if it's within SIWES period
-    if (!$this->user->siwes_start_date) {
+    // Check if SIWES is active globally
+    $siwesSettings = SiwesSettings::getInstance();
+    if (!$siwesSettings->isSiwesActive()) {
         return false;
     }
     
-    $siwesStart = Carbon::parse($this->user->siwes_start_date);
+    // Check if it's within SIWES period
+    if (!$siwesSettings->start_date) {
+        return false;
+    }
+    
+    $siwesStart = Carbon::parse($siwesSettings->start_date);
     $siwesEnd = $siwesStart->copy()->addWeeks(24);
     
     return $selectedDate->between($siwesStart, $siwesEnd) && $selectedDate->lte(now());
@@ -149,7 +167,19 @@ $existingLog = computed(function () {
         ->first();
 });
 
+$availableWeeks = computed(function () {
+    $siwesSettings = SiwesSettings::getInstance();
+    return $siwesSettings->getAvailableWeeks();
+});
+
 $saveActivity = function () {
+    // Check if superadmin has started SIWES before allowing activity submission
+    $siwesSettings = SiwesSettings::getInstance();
+    if (!$siwesSettings->is_active || !$siwesSettings->start_date) {
+        $this->addError('activity_description', 'SIWES period has not been started by the administrator. Cannot log activities at this time.');
+        return;
+    }
+    
     $this->validate();
     
     if (!$this->canLogForDate) {
@@ -175,17 +205,13 @@ $saveActivity = function () {
             $documentPath = $this->document->store('siwes-documents', 'public');
         }
         
-        $weekNumber = SiwesActivityLog::calculateWeekNumber(
-            Carbon::parse($this->selected_date),
-            Carbon::parse($this->user->siwes_start_date)
-        );
-        
-        $approvalStatus = $this->is_backdated ? 'pending' : 'approved';
+        // Always set approval status to pending as per requirement
+        $approvalStatus = 'pending';
         
         SiwesActivityLog::create([
             'user_id' => $this->user->id,
             'activity_date' => $this->selected_date,
-            'week_number' => $weekNumber,
+            'week_number' => $this->selected_week, // Use selected week instead of calculated
             'day_type' => $this->day_type,
             'activity_description' => $this->activity_description,
             'document_path' => $documentPath,
@@ -196,9 +222,7 @@ $saveActivity = function () {
             'approval_status' => $approvalStatus,
         ]);
         
-        $message = $this->is_backdated 
-            ? 'Activity logged successfully! It will be reviewed by your supervisor.'
-            : 'Activity logged successfully!';
+        $message = 'Activity logged successfully! It will be reviewed by your supervisor.';
             
         session()->flash('success', $message);
         return redirect()->route('siwes.dashboard');
@@ -259,6 +283,30 @@ $saveActivity = function () {
                             @elseif($is_backdated)
                                 <p class="text-amber-600 dark:text-amber-400 text-sm mt-1">This is a backdated entry and will require supervisor approval</p>
                             @endif
+                        </div>
+
+                        <!-- Week Number Selection -->
+                        <div>
+                            <label for="selected_week" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                                Week Number
+                            </label>
+                            <select 
+                                id="selected_week"
+                                wire:model.live="selected_week"
+                                class="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-zinc-700 dark:text-zinc-100"
+                            >
+                                @foreach($this->availableWeeks as $week)
+                                    <option value="{{ $week }}" {{ $week == $current_week ? 'selected' : '' }}>
+                                        Week {{ $week }} {{ $week == $current_week ? '(Current)' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('selected_week')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                            <p class="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
+                                Select the week number for this activity (1-24)
+                            </p>
                         </div>
 
                         <!-- Backdate Reason (if backdated) -->

@@ -61,6 +61,9 @@
                     <flux:navlist.item icon="users" :href="route('supervisor.students')"
                         :current="request()->routeIs('supervisor.students')" wire:navigate>{{ __('My Students') }}
                     </flux:navlist.item>
+                    <flux:navlist.item icon="document-text" :href="route('supervisor.student-activities')"
+                        :current="request()->routeIs('supervisor.student-activities')" wire:navigate>{{ __('Student Activities') }}
+                    </flux:navlist.item>
                 </flux:navlist.group>
             @endrole
 

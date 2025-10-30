@@ -29,18 +29,53 @@ class RolePermissionSeeder extends Seeder
             'role.delete',
             'role.assign',
             
-            // Log management
-            'log.view',
-            'log.create',
-            'log.edit',
-            'log.delete',
-            'log.approve',
+            // SIWES Activity Log management
+            'siwes.activity.view',
+            'siwes.activity.create',
+            'siwes.activity.edit',
+            'siwes.activity.delete',
+            'siwes.activity.approve',
+            'siwes.activity.reject',
+            'siwes.activity.history',
+            
+            // SIWES Student management
+            'siwes.student.view',
+            'siwes.student.manage',
+            'siwes.student.assign-supervisor',
+            
+            // SIWES Supervisor management
+            'siwes.supervisor.view',
+            'siwes.supervisor.manage',
+            'siwes.supervisor.approvals',
+            'siwes.supervisor.students',
+            
+            // SIWES PPA management
+            'siwes.ppa.setup',
+            'siwes.ppa.view',
+            'siwes.ppa.edit',
+            
+            // SIWES Weekly Summary
+            'siwes.summary.create',
+            'siwes.summary.view',
+            'siwes.summary.edit',
+            
+            // SIWES Settings (Admin only)
+            'siwes.settings.view',
+            'siwes.settings.manage',
+            'siwes.settings.control',
             
             // System management
             'dashboard.view',
             'system.manage',
             'report.view',
             'data.export',
+            
+            // Department management
+            'department.view',
+            'department.create',
+            'department.edit',
+            'department.delete',
+            'department.manage',
         ];
 
         foreach ($permissions as $permission) {
@@ -52,21 +87,32 @@ class RolePermissionSeeder extends Seeder
         // Student role
         $studentRole = Role::firstOrCreate(['name' => 'student']);
         $studentRole->syncPermissions([
-            'log.view',
-            'log.create',
-            'log.edit',
             'dashboard.view',
+            'siwes.activity.view',
+            'siwes.activity.create',
+            'siwes.activity.edit',
+            'siwes.activity.history',
+            'siwes.ppa.setup',
+            'siwes.ppa.view',
+            'siwes.ppa.edit',
+            'siwes.summary.create',
+            'siwes.summary.view',
+            'siwes.summary.edit',
         ]);
 
         // Supervisor role
         $supervisorRole = Role::firstOrCreate(['name' => 'supervisor']);
         $supervisorRole->syncPermissions([
-            'user.view',
-            'log.view',
-            'log.create',
-            'log.edit',
-            'log.approve',
             'dashboard.view',
+            'user.view',
+            'siwes.activity.view',
+            'siwes.activity.approve',
+            'siwes.activity.reject',
+            'siwes.activity.history',
+            'siwes.student.view',
+            'siwes.supervisor.approvals',
+            'siwes.supervisor.students',
+            'siwes.summary.view',
             'report.view',
         ]);
 

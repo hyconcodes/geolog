@@ -29,7 +29,6 @@ $pendingLogs = computed(function () {
             $q->where('supervisor_id', $this->supervisor->id);
         })
         ->where('approval_status', 'pending')
-        ->where('is_backdated', true)
         ->orderBy('created_at', 'desc');
     
     // Filter by student
@@ -65,7 +64,6 @@ $weeks = computed(function () {
             $q->where('supervisor_id', $this->supervisor->id);
         })
         ->where('approval_status', 'pending')
-        ->where('is_backdated', true)
         ->select('week_number')
         ->distinct()
         ->orderBy('week_number')
@@ -76,40 +74,40 @@ $stats = computed(function () {
     $total = SiwesActivityLog::whereHas('user', function ($q) {
             $q->where('supervisor_id', $this->supervisor->id);
         })
-        ->where('is_backdated', true)
         ->count();
         
     $pending = SiwesActivityLog::whereHas('user', function ($q) {
             $q->where('supervisor_id', $this->supervisor->id);
         })
         ->where('approval_status', 'pending')
-        ->where('is_backdated', true)
         ->count();
         
     $approved = SiwesActivityLog::whereHas('user', function ($q) {
             $q->where('supervisor_id', $this->supervisor->id);
         })
         ->where('approval_status', 'approved')
-        ->where('is_backdated', true)
         ->count();
         
     $rejected = SiwesActivityLog::whereHas('user', function ($q) {
             $q->where('supervisor_id', $this->supervisor->id);
         })
         ->where('approval_status', 'rejected')
-        ->where('is_backdated', true)
         ->count();
     
     return compact('total', 'pending', 'approved', 'rejected');
 });
 
 $approveLog = function ($logId) {
+    // Check permission
+    if (!auth()->user()->can('siwes.activity.approve')) {
+        abort(403, 'You do not have permission to approve activities.');
+    }
+    
     $log = SiwesActivityLog::whereHas('user', function ($q) {
             $q->where('supervisor_id', $this->supervisor->id);
         })
         ->where('id', $logId)
         ->where('approval_status', 'pending')
-        ->where('is_backdated', true)
         ->firstOrFail();
     
     $log->update([
@@ -129,6 +127,11 @@ $showRejectModal = function ($logId) {
 };
 
 $rejectLog = function () {
+    // Check permission
+    if (!auth()->user()->can('siwes.activity.approve')) {
+        abort(403, 'You do not have permission to reject activities.');
+    }
+    
     $this->validate([
         'rejection_reason' => 'required|string|min:10|max:500',
     ]);
@@ -138,7 +141,6 @@ $rejectLog = function () {
         })
         ->where('id', $this->selected_log)
         ->where('approval_status', 'pending')
-        ->where('is_backdated', true)
         ->firstOrFail();
     
     $log->update([
@@ -359,7 +361,7 @@ $closeRejectModal = function () {
                             @if($log->document_path)
                                 <div class="mb-6">
                                     <h4 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Attached Document:</h4>
-                                    <a href="{{ Storage::url($log->document_path) }}" 
+                                    <a href="{{ asset('storage/' . $log->document_path) }}" 
                                        target="_blank"
                                        class="inline-flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -372,26 +374,30 @@ $closeRejectModal = function () {
 
                             <!-- Action Buttons -->
                             <div class="flex space-x-3">
-                                <button 
-                                    wire:click="approveLog({{ $log->id }})"
-                                    wire:confirm="Are you sure you want to approve this backdated activity log?"
-                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
-                                >
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    Approve
-                                </button>
-                                
-                                <button 
-                                    wire:click="showRejectModal({{ $log->id }})"
-                                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
-                                >
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                    Reject
-                                </button>
+                                @can('siwes.activity.approve')
+                                    <button 
+                                        wire:click="approveLog({{ $log->id }})"
+                                        wire:confirm="Are you sure you want to approve this backdated activity log?"
+                                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+                                    >
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        Approve
+                                    </button>
+                                    
+                                    <button 
+                                        wire:click="showRejectModal({{ $log->id }})"
+                                        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+                                    >
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        Reject
+                                    </button>
+                                @else
+                                    <p class="text-zinc-500 dark:text-zinc-400 italic">You don't have permission to approve/reject activities.</p>
+                                @endcan
                             </div>
                         </div>
                     @endforeach

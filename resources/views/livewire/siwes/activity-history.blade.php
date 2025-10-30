@@ -2,6 +2,7 @@
 
 use function Livewire\Volt\{state, mount, computed, with};
 use App\Models\SiwesActivityLog;
+use App\Models\SiwesSettings;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 state([
@@ -16,8 +17,15 @@ state([
 mount(function () {
     $this->user = auth()->user();
     
+    // Check if superadmin has started SIWES
+    $siwesSettings = SiwesSettings::getInstance();
+    if (!$siwesSettings->is_active || !$siwesSettings->start_date) {
+        session()->flash('error', 'SIWES period has not been started by the administrator. Please contact your supervisor or administrator.');
+        return redirect()->route('dashboard');
+    }
+    
     if (!$this->user->hasPPALocation()) {
-        return redirect()->route('student.ppa-setup');
+        return redirect()->route('siwes.ppa-setup');
     }
 });
 
@@ -45,11 +53,8 @@ $activities = computed(function () {
 });
 
 $weeks = computed(function () {
-    return $this->user->siwesActivityLogs()
-        ->select('week_number')
-        ->distinct()
-        ->orderBy('week_number')
-        ->pluck('week_number');
+    $siwesSettings = SiwesSettings::getInstance();
+    return collect($siwesSettings->getAvailableWeeks());
 });
 
 $stats = computed(function () {
@@ -83,7 +88,34 @@ $downloadDocument = function ($logId) {
         return;
     }
     
-    return response()->download(storage_path('app/' . $log->document_path));
+    $filePath = storage_path('app/public/' . $log->document_path);
+    
+    if (!file_exists($filePath)) {
+        session()->flash('error', 'Document file not found.');
+        return;
+    }
+    
+    return response()->download($filePath);
+};
+
+$deleteActivity = function ($logId) {
+    $log = SiwesActivityLog::findOrFail($logId);
+    
+    // Check if the log belongs to the authenticated user
+    if ($log->user_id !== auth()->id()) {
+        abort(403);
+    }
+    
+    // Check if the log is from today
+    if (!$log->activity_date->isToday()) {
+        session()->flash('error', 'You can only delete activities logged today.');
+        return;
+    }
+    
+    // Delete the log
+    $log->delete();
+    
+    session()->flash('success', 'Activity log deleted successfully.');
 };
 
 ?>
@@ -96,6 +128,19 @@ $downloadDocument = function ($logId) {
                 <h1 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Activity History</h1>
                 <p class="text-zinc-600 dark:text-zinc-400">View and manage your SIWES activity logs</p>
             </div>
+
+            <!-- Flash Messages -->
+            @if (session()->has('success'))
+                <div class="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if (session()->has('error'))
+                <div class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
+                    {{ session('error') }}
+                </div>
+            @endif
 
             <!-- Statistics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -262,6 +307,18 @@ $downloadDocument = function ($logId) {
                                                 icon="document-arrow-down"
                                             >
                                                 Download
+                                            </flux:button>
+                                        @endif
+                                        
+                                        @if($activity->activity_date->isToday())
+                                            <flux:button 
+                                                wire:click="deleteActivity({{ $activity->id }})" 
+                                                wire:confirm="Are you sure you want to delete this activity log? This action cannot be undone."
+                                                size="sm" 
+                                                variant="danger"
+                                                icon="trash"
+                                            >
+                                                Delete
                                             </flux:button>
                                         @endif
                                         

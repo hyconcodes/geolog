@@ -2,6 +2,7 @@
 
 use function Livewire\Volt\{state, mount, computed};
 use App\Models\SiwesActivityLog;
+use App\Models\SiwesSettings;
 use Carbon\Carbon;
 
 state([
@@ -16,6 +17,13 @@ state([
 mount(function () {
     $this->user = auth()->user();
     
+    // Check if superadmin has started SIWES
+    $siwesSettings = SiwesSettings::getInstance();
+    if (!$siwesSettings->is_active || !$siwesSettings->start_date) {
+        session()->flash('error', 'SIWES period has not been started by the administrator. Please contact your supervisor or administrator.');
+        return redirect()->route('dashboard');
+    }
+    
     if (!$this->user->hasPPALocation()) {
         return redirect()->route('siwes.ppa-setup');
     }
@@ -29,14 +37,19 @@ $loadDashboardData = function () {
     
     $this->total_logs = $this->user->approvedSiwesLogs()->count();
     
-    // Get this week's logs
-    $weekStart = $this->user->siwes_start_date ? 
-        $this->user->siwes_start_date->addWeeks($this->current_week - 1)->startOfWeek() : 
-        now()->startOfWeek();
-    
-    $this->this_week_logs = $this->user->approvedSiwesLogs()
-        ->whereBetween('activity_date', [$weekStart, $weekStart->copy()->endOfWeek()])
-        ->count();
+    // Get this week's logs using global SIWES settings
+    $siwesSettings = SiwesSettings::getInstance();
+    if ($siwesSettings->start_date && $this->current_week > 0) {
+        $weekStart = Carbon::parse($siwesSettings->start_date)
+            ->addWeeks($this->current_week - 1)
+            ->startOfWeek();
+        
+        $this->this_week_logs = $this->user->approvedSiwesLogs()
+            ->whereBetween('activity_date', [$weekStart, $weekStart->copy()->endOfWeek()])
+            ->count();
+    } else {
+        $this->this_week_logs = 0;
+    }
     
     // Get recent logs
     $this->recent_logs = $this->user->approvedSiwesLogs()

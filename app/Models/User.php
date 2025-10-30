@@ -9,6 +9,9 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\Department;
+use App\Models\SiwesActivityLog;
+use App\Models\SiwesSettings;
 
 class User extends Authenticatable
 {
@@ -217,23 +220,21 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if SIWES has started for this user
+     * Check if SIWES has started globally
      */
     public function hasSiwesStarted(): bool
     {
-        return !is_null($this->siwes_start_date);
+        $siwesSettings = SiwesSettings::getInstance();
+        return $siwesSettings->isSiwesActive();
     }
 
     /**
-     * Get current SIWES week number
+     * Get current SIWES week number based on global settings
      */
     public function getCurrentSiwesWeek(): ?int
     {
-        if (!$this->hasSiwesStarted()) {
-            return null;
-        }
-
-        return now()->diffInWeeks($this->siwes_start_date) + 1;
+        $siwesSettings = SiwesSettings::getInstance();
+        return $siwesSettings->getCurrentWeek();
     }
 
     /**
@@ -241,12 +242,8 @@ class User extends Authenticatable
      */
     public function isSiwesActive(): bool
     {
-        if (!$this->hasSiwesStarted()) {
-            return false;
-        }
-
-        $currentWeek = $this->getCurrentSiwesWeek();
-        return $currentWeek <= 24 && !$this->siwes_completed;
+        $siwesSettings = SiwesSettings::getInstance();
+        return $siwesSettings->isSiwesActive() && !$siwesSettings->isSiwesEnded();
     }
 
     /**
@@ -254,11 +251,21 @@ class User extends Authenticatable
      */
     public function getRemainingWeeks(): int
     {
-        if (!$this->hasSiwesStarted()) {
+        $siwesSettings = SiwesSettings::getInstance();
+        if (!$siwesSettings->isSiwesActive()) {
             return 24;
         }
 
-        $currentWeek = $this->getCurrentSiwesWeek();
+        $currentWeek = $siwesSettings->getCurrentWeek();
         return max(0, 24 - $currentWeek + 1);
+    }
+
+    /**
+     * Get available weeks for activity logging
+     */
+    public function getAvailableWeeks(): array
+    {
+        $siwesSettings = SiwesSettings::getInstance();
+        return $siwesSettings->getAvailableWeeks();
     }
 }

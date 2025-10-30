@@ -47,7 +47,7 @@ new class extends Component {
             $query->where(function (Builder $q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
                   ->orWhere('email', 'like', '%' . $this->search . '%')
-                  ->orWhere('matric_number', 'like', '%' . $this->search . '%');
+                  ->orWhere('matric_no', 'like', '%' . $this->search . '%');
             });
         }
 
@@ -218,9 +218,9 @@ new class extends Component {
                                                         <div class="text-sm text-gray-500 dark:text-gray-400">
                                                             {{ $student->email }}
                                                         </div>
-                                                        @if($student->matric_number)
+                                                        @if($student->matric_no)
                                                             <div class="text-xs text-gray-400 dark:text-gray-500">
-                                                                {{ $student->matric_number }}
+                                                                {{ $student->matric_no }}
                                                             </div>
                                                         @endif
                                                     </div>

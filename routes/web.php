@@ -72,6 +72,7 @@ Route::middleware(['auth', 'role:student'])->prefix('siwes')->name('siwes.')->gr
 Route::middleware(['auth', 'role:supervisor'])->prefix('supervisor')->name('supervisor.')->group(function () {
     Volt::route('siwes-approvals', 'supervisor.siwes-approvals')->name('siwes-approvals');
     Volt::route('students', 'supervisor.students')->name('students');
+    Volt::route('student-activities', 'supervisor.student-activities')->name('student-activities');
 });
 
 // Admin routes
