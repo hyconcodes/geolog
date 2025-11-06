@@ -39,6 +39,8 @@ class User extends Authenticatable
         'siwes_start_date',
         'siwes_end_date',
         'siwes_completed',
+        'final_report_path',
+        'report_submitted_at',
     ];
 
     /**
@@ -68,6 +70,7 @@ class User extends Authenticatable
             'siwes_start_date' => 'date',
             'siwes_end_date' => 'date',
             'siwes_completed' => 'boolean',
+            'report_submitted_at' => 'datetime',
         ];
     }
 
@@ -95,14 +98,6 @@ class User extends Authenticatable
         // Generate 3D avatar using DiceBear API
         $seed = $this->email ?? $this->name ?? 'default';
         return "https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=" . urlencode($seed) . "&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf";
-    }
-
-    /**
-     * Check if user has a specific role
-     */
-    public function hasRole($role): bool
-    {
-        return $this->roles()->where('name', $role)->exists();
     }
 
     /**

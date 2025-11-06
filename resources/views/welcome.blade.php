@@ -545,6 +545,7 @@
             }
         }
     </style>
+    
 </head>
 <body>
     <!-- Header -->
@@ -558,15 +559,42 @@
             </a>
             
             <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <li><a href="{{ url('/#home') }}">Home</a></li>
+                <li><a href="{{ url('/#about') }}">About</a></li>
+                <li><a href="{{ url('/#features') }}">Features</a></li>
+                <li><a href="{{ url('/#contact') }}">Contact</a></li>
+                @auth
+                    @if(auth()->user()->hasRole('student'))
+                        <li><a href="{{ route('siwes.dashboard') }}">Student Dashboard</a></li>
+                    @elseif(auth()->user()->hasRole('supervisor'))
+                        <li><a href="{{ route('supervisor.siwes-approvals') }}">Supervisor Dashboard</a></li>
+                    @elseif(auth()->user()->hasRole('superadmin'))
+                        <li><a href="{{ route('superadmin.dashboard') }}">Admin Dashboard</a></li>
+                    @endif
+                @endauth
             </ul>
             
             <div class="auth-buttons">
-                <a href="{{ route('login') }}" class="btn btn-outline">Login</a>
-                <a href="{{ route('register') }}" class="btn btn-primary">Register</a>
+                @auth
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <a href="{{ route('logout') }}" class="btn btn-outline" 
+                           onclick="event.preventDefault(); this.closest('form').submit();">
+                            Logout
+                        </a>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="btn btn-outline">Login</a>
+                    <div class="dropdown" style="display: inline-block;">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="registerDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            Register
+                        </button>
+                        {{-- <ul class="dropdown-menu" aria-labelledby="registerDropdown">
+                            <li><a class="dropdown-item" href="{{ route('student.register') }}">As Student</a></li>
+                            <li><a class="dropdown-item" href="{{ route('supervisor.register') }}">As Supervisor</a></li>
+                        </ul> --}}
+                    </div>
+                @endauth
             </div>
             
             <button class="mobile-menu-btn">
@@ -582,8 +610,8 @@
                 <h1>Transforming Industrial Training into Smart Digital Experience</h1>
                 <p>Record, Track, and Verify your SIWES journey with real-time supervision, geolocation, and offline accessibility.</p>
                 <div class="hero-buttons">
-                    <a href="#" class="btn-hero-primary">Get Started</a>
-                    <a href="#" class="btn-hero-secondary">Login as Student / Supervisor</a>
+                    <a href="{{ route('student.register') }}" class="btn-hero-primary">Get Started</a>
+                    <a href="{{ route('login') }}" class="btn-hero-secondary">Login as Student / Supervisor</a>
                 </div>
             </div>
             
@@ -631,13 +659,13 @@
                     <p>Protect your account with two-factor authentication, ensuring your logbook data remains secure and accessible only to you.</p>
                 </div>
                 
-                <div class="feature-card">
+                {{-- <div class="feature-card">
                     <div class="feature-icon">
                         <i class="fas fa-wifi"></i>
                     </div>
                     <h3>Offline Sync</h3>
                     <p>Record your logs even without internet connection. Data automatically syncs when you're back online, ensuring no entry is lost.</p>
-                </div>
+                </div> --}}
             </div>
         </div>
     </section>
@@ -663,7 +691,7 @@
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2025 Smart Digital Logbook System (LogX). Built by Students of BOUESTI.</p>
+                <p>&copy; 2025 Smart Digital Logbook System (LogX). Built with 💖 by Students of BOUESTI.</p>
             </div>
         </div>
     </footer>

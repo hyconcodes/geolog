@@ -91,7 +91,7 @@ $progress_percentage = computed(function () {
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">SIWES Progress</h2>
                 <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                    {{ $remaining_weeks }} weeks remaining
+                    {{ $remaining_weeks-1 }} weeks remaining
                 </span>
             </div>
             

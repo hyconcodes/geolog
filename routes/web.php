@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\StudentController;
@@ -66,6 +67,16 @@ Route::middleware(['auth', 'role:student'])->prefix('siwes')->name('siwes.')->gr
     Volt::route('log-activity', 'siwes.log-activity')->name('log-activity');
     Volt::route('weekly-summary', 'siwes.weekly-summary')->name('weekly-summary');
     Volt::route('activity-history', 'siwes.activity-history')->name('activity-history');
+    Volt::route('final-report', 'siwes.final-report')->name('final-report');
+    
+    // Route to view submitted final report
+    Route::get('view-report', function () {
+        $user = auth()->user();
+        if (!$user->final_report_path || !Storage::disk('public')->exists($user->final_report_path)) {
+            abort(404, 'Report not found');
+        }
+        return response()->file(Storage::disk('public')->path($user->final_report_path));
+    })->name('view-report');
 });
 
 // SIWES routes for supervisors
@@ -73,6 +84,18 @@ Route::middleware(['auth', 'role:supervisor'])->prefix('supervisor')->name('supe
     Volt::route('siwes-approvals', 'supervisor.siwes-approvals')->name('siwes-approvals');
     Volt::route('students', 'supervisor.students')->name('students');
     Volt::route('student-activities', 'supervisor.student-activities')->name('student-activities');
+    Volt::route('student-reports', 'supervisor.student-reports')->name('student-reports');
+    
+    Route::get('view-student-report/{userId}', function ($userId) {
+        $student = \App\Models\User::findOrFail($userId);
+        if ($student->supervisor_id !== auth()->id()) {
+            abort(403, 'Unauthorized access to this student report');
+        }
+        if (!$student->final_report_path || !Storage::disk('public')->exists($student->final_report_path)) {
+            abort(404, 'Report not found');
+        }
+        return response()->file(Storage::disk('public')->path($student->final_report_path));
+    })->name('view-student-report');
 });
 
 // Admin routes
@@ -82,4 +105,13 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')-
     Volt::route('supervisors', 'admin.supervisor-management')->name('supervisors');
     Volt::route('departments', 'admin.department-management')->name('departments');
     Volt::route('departments/{id}', 'admin.department-detail')->name('department.detail');
+    Volt::route('student-reports', 'admin.student-reports')->name('student-reports');
+    
+    Route::get('view-student-report/{userId}', function ($userId) {
+        $student = \App\Models\User::findOrFail($userId);
+        if (!$student->final_report_path || !Storage::disk('public')->exists($student->final_report_path)) {
+            abort(404, 'Report not found');
+        }
+        return response()->file(Storage::disk('public')->path($student->final_report_path));
+    })->name('view-student-report');
 });

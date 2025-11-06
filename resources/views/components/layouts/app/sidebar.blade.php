@@ -30,7 +30,7 @@
 
             @role('student')
                 <flux:navlist.group :heading="__('SIWES')" class="grid">
-                    @if(auth()->user()->ppa_location)
+                    @if(auth()->user()->ppa_longitude || auth()->user()->ppa_latitude)
                         <flux:navlist.item icon="chart-bar" :href="route('siwes.dashboard')"
                             :current="request()->routeIs('siwes.dashboard')" wire:navigate>{{ __('SIWES Dashboard') }}
                         </flux:navlist.item>
@@ -45,6 +45,9 @@
                                 :current="request()->routeIs('siwes.weekly-summary')" wire:navigate>{{ __('Weekly Summary') }}
                             </flux:navlist.item>
                         @endif
+                        <flux:navlist.item icon="document-text" :href="route('siwes.final-report')"
+                            :current="request()->routeIs('siwes.final-report')" wire:navigate>{{ __('Final Report') }}
+                        </flux:navlist.item>
                     @else
                         <flux:navlist.item icon="map-pin" :href="route('siwes.ppa-setup')"
                             :current="request()->routeIs('siwes.ppa-setup')" wire:navigate>{{ __('PPA Setup') }}
@@ -64,6 +67,9 @@
                     <flux:navlist.item icon="document-text" :href="route('supervisor.student-activities')"
                         :current="request()->routeIs('supervisor.student-activities')" wire:navigate>{{ __('Student Activities') }}
                     </flux:navlist.item>
+                    <flux:navlist.item icon="document-text" :href="route('supervisor.student-reports')"
+                        :current="request()->routeIs('supervisor.student-reports')" wire:navigate>{{ __('Student Reports') }}
+                    </flux:navlist.item>
                 </flux:navlist.group>
             @endrole
 
@@ -80,6 +86,9 @@
                     </flux:navlist.item>
                     <flux:navlist.item icon="building-office" :href="route('admin.departments')"
                         :current="request()->routeIs('admin.departments')" wire:navigate>{{ __('Department') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="document-text" :href="route('admin.student-reports')"
+                        :current="request()->routeIs('admin.student-reports')" wire:navigate>{{ __('Student Reports') }}
                     </flux:navlist.item>
                 </flux:navlist.group>
             @endrole
