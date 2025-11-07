@@ -1,749 +1,549 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LogX - Smart Digital Logbook System</title>
+    <title>{{ config('app.name', 'GeoLog') }} - Smart Digital Logbook System</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-green': '#10b981',
+                        'primary-blue': '#3b82f6',
+                        'dark-green': '#059669',
+                        'dark-blue': '#2563eb',
+                    }
+                }
+            }
+        }
+    </script>
+    
     <style>
-        :root {
-            --primary-green: #008037;
-            --secondary-gold: #FFD700;
-            --background: #F8FAF9;
-            --text-dark: #1C1C1C;
-            --text-muted: #6B6B6B;
-            --white: #FFFFFF;
-            --shadow: rgba(0, 0, 0, 0.1);
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: var(--background);
-            color: var(--text-dark);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-        
-        /* Header Styles */
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(0, 128, 55, 0.1);
-            z-index: 1000;
-            padding: 1rem 0;
-            transition: all 0.3s ease;
-        }
-        
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 2rem;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary-green);
-            text-decoration: none;
-        }
-        
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary-green), var(--secondary-gold));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
-        }
-        
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-            align-items: center;
-        }
-        
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-dark);
-            font-weight: 500;
-            transition: color 0.3s ease;
-            position: relative;
-        }
-        
-        .nav-links a:hover {
-            color: var(--primary-green);
-        }
-        
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--primary-green);
-            transition: width 0.3s ease;
-        }
-        
-        .nav-links a:hover::after {
-            width: 100%;
-        }
-        
-        .auth-buttons {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        
-        .btn-outline {
-            color: var(--primary-green);
-            border-color: var(--primary-green);
-            background: transparent;
-        }
-        
-        .btn-outline:hover {
-            background: var(--primary-green);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px var(--shadow);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--secondary-gold), #FFA500);
-            color: var(--text-dark);
-            border-color: var(--secondary-gold);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
-        }
-        
-        /* Hero Section */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(135deg, var(--primary-green) 0%, #00A040 50%, var(--secondary-gold) 100%);
-        }
-        
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="a" cx="50%" cy="50%"><stop offset="0%" stop-color="%23ffffff" stop-opacity="0.1"/><stop offset="100%" stop-color="%23ffffff" stop-opacity="0"/></radialGradient></defs><circle cx="200" cy="300" r="150" fill="url(%23a)"/><circle cx="800" cy="200" r="200" fill="url(%23a)"/><circle cx="600" cy="700" r="180" fill="url(%23a)"/></svg>');
-            opacity: 0.3;
-        }
-        
-        .hero-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .hero-content h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 1.5rem;
-            line-height: 1.2;
-        }
-        
-        .hero-content p {
-            font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 2.5rem;
-            line-height: 1.6;
-        }
-        
-        .hero-buttons {
-            display: flex;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .btn-hero-primary {
-            background: var(--secondary-gold);
-            color: var(--text-dark);
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-radius: 50px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-        }
-        
-        .btn-hero-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.4);
-        }
-        
-        .btn-hero-secondary {
-            background: transparent;
-            color: white;
-            border: 2px solid white;
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-radius: 50px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-hero-secondary:hover {
-            background: white;
-            color: var(--primary-green);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(255, 255, 255, 0.3);
-        }
-        
-        .hero-illustration {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .floating-shape {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
+        .animate-float {
             animation: float 6s ease-in-out infinite;
         }
-        
-        .shape-1 {
-            width: 200px;
-            height: 200px;
-            top: -50px;
-            right: -50px;
-            animation-delay: 0s;
-        }
-        
-        .shape-2 {
-            width: 150px;
-            height: 150px;
-            bottom: -30px;
-            left: -30px;
-            animation-delay: 2s;
-        }
-        
-        .shape-3 {
-            width: 100px;
-            height: 100px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            animation-delay: 4s;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
-        }
-        
-        .mockup-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            position: relative;
-            z-index: 3;
-        }
-        
-        .mockup-screen {
-            background: white;
-            border-radius: 15px;
-            padding: 1.5rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        }
-        
-        .mockup-header {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .mockup-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-        
-        .dot-red { background: #ff5f57; }
-        .dot-yellow { background: #ffbd2e; }
-        .dot-green { background: #28ca42; }
-        
-        .mockup-content {
-            height: 200px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            font-size: 1.1rem;
-        }
-        
-        /* Features Section */
-        .features {
-            padding: 6rem 0;
-            background: var(--white);
-        }
-        
-        .features-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 3rem;
-            margin-top: 4rem;
-        }
-        
-        .feature-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 2.5rem;
-            text-align: center;
-            border: 1px solid rgba(0, 128, 55, 0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .feature-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary-green), var(--secondary-gold));
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px var(--shadow);
-        }
-        
-        .feature-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1.5rem;
-            background: linear-gradient(135deg, var(--primary-green), var(--secondary-gold));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: white;
-        }
-        
-        .feature-card h3 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-dark);
-            margin-bottom: 1rem;
-        }
-        
-        .feature-card p {
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
-        
-        .section-title {
-            text-align: center;
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin-bottom: 1rem;
-        }
-        
-        .section-subtitle {
-            text-align: center;
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        
-        /* Footer */
-        .footer {
-            background: var(--primary-green);
-            color: white;
-            padding: 3rem 0 2rem;
-        }
-        
-        .footer-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            text-align: center;
-        }
-        
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-        
-        .footer-links {
-            display: flex;
-            gap: 2rem;
-            list-style: none;
-        }
-        
-        .footer-links a {
-            color: var(--secondary-gold);
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        
-        .footer-links a:hover {
-            color: white;
-        }
-        
-        .footer-bottom {
-            border-top: 1px solid rgba(255, 215, 0, 0.3);
-            padding-top: 2rem;
-            color: rgba(255, 255, 255, 0.8);
-        }
-        
-        /* Mobile Menu */
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: var(--text-dark);
-            cursor: pointer;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            
-            .mobile-menu-btn {
-                display: block;
-            }
-            
-            .hero-container {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-                text-align: center;
-            }
-            
-            .hero-content h1 {
-                font-size: 2.5rem;
-            }
-            
-            .hero-buttons {
-                justify-content: center;
-            }
-            
-            .features-grid {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-            
-            .footer-content {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .footer-links {
-                justify-content: center;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .nav-container {
-                padding: 0 1rem;
-            }
-            
-            .hero-container {
-                padding: 0 1rem;
-            }
-            
-            .features-container {
-                padding: 0 1rem;
-            }
-            
-            .footer-container {
-                padding: 0 1rem;
-            }
-            
-            .auth-buttons {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            
-            .btn {
-                padding: 0.5rem 1rem;
-                font-size: 0.8rem;
-            }
+        .animate-float-delayed {
+            animation: float 6s ease-in-out infinite 2s;
         }
     </style>
-    
 </head>
-<body>
+<body class="font-sans antialiased bg-gray-50">
     <!-- Header -->
-    <header class="header">
-        <nav class="nav-container">
-            <a href="#" class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-book"></i>
-                </div>
-                <span>LogX</span>
-            </a>
-            
-            <ul class="nav-links">
-                <li><a href="{{ url('/#home') }}">Home</a></li>
-                <li><a href="{{ url('/#about') }}">About</a></li>
-                <li><a href="{{ url('/#features') }}">Features</a></li>
-                <li><a href="{{ url('/#contact') }}">Contact</a></li>
-                @auth
-                    @if(auth()->user()->hasRole('student'))
-                        <li><a href="{{ route('siwes.dashboard') }}">Student Dashboard</a></li>
-                    @elseif(auth()->user()->hasRole('supervisor'))
-                        <li><a href="{{ route('supervisor.siwes-approvals') }}">Supervisor Dashboard</a></li>
-                    @elseif(auth()->user()->hasRole('superadmin'))
-                        <li><a href="{{ route('superadmin.dashboard') }}">Admin Dashboard</a></li>
-                    @endif
-                @endauth
-            </ul>
-            
-            <div class="auth-buttons">
-                @auth
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <a href="{{ route('logout') }}" class="btn btn-outline" 
-                           onclick="event.preventDefault(); this.closest('form').submit();">
-                            Logout
-                        </a>
-                    </form>
-                @else
-                    <a href="{{ route('login') }}" class="btn btn-outline">Login</a>
-                    <div class="dropdown" style="display: inline-block;">
-                        <button class="btn btn-primary dropdown-toggle" type="button" id="registerDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            Register
-                        </button>
-                        {{-- <ul class="dropdown-menu" aria-labelledby="registerDropdown">
-                            <li><a class="dropdown-item" href="{{ route('student.register') }}">As Student</a></li>
-                            <li><a class="dropdown-item" href="{{ route('supervisor.register') }}">As Supervisor</a></li>
-                        </ul> --}}
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <a href="#" class="flex items-center space-x-2 group">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary-green to-primary-blue rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-book-open text-white text-lg"></i>
                     </div>
-                @endauth
+                    <span class="text-2xl font-bold bg-gradient-to-r from-primary-green to-primary-blue bg-clip-text text-transparent">{{ config('app.name', 'GeoLog') }}</span>
+                </a>
+                
+                <!-- Desktop Navigation -->
+                <ul class="hidden md:flex items-center space-x-8">
+                    <li><a href="#home" class="text-gray-700 hover:text-primary-green font-medium transition-colors">Home</a></li>
+                    <li><a href="#features" class="text-gray-700 hover:text-primary-blue font-medium transition-colors">Features</a></li>
+                    <li><a href="#benefits" class="text-gray-700 hover:text-primary-green font-medium transition-colors">Benefits</a></li>
+                    @auth
+                        @if(auth()->user()->hasRole('student'))
+                            <li><a href="{{ route('siwes.dashboard') }}" class="text-gray-700 hover:text-primary-green font-medium">Dashboard</a></li>
+                        @elseif(auth()->user()->hasRole('supervisor'))
+                            <li><a href="{{ route('supervisor.siwes-approvals') }}" class="text-gray-700 hover:text-primary-blue font-medium">Dashboard</a></li>
+                        @elseif(auth()->user()->hasRole('superadmin'))
+                            <li><a href="{{ route('superadmin.dashboard') }}" class="text-gray-700 hover:text-primary-green font-medium">Dashboard</a></li>
+                        @endif
+                    @endauth
+                </ul>
+                
+                <!-- Auth Buttons (Desktop) -->
+                <div class="hidden md:flex items-center space-x-4">
+                    @auth
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="px-6 py-2 text-primary-green border-2 border-primary-green rounded-full font-semibold hover:bg-primary-green hover:text-white transition-all duration-300">
+                                Logout
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ route('login') }}" class="px-6 py-2 text-primary-blue border-2 border-primary-blue rounded-full font-semibold hover:bg-primary-blue hover:text-white transition-all duration-300">
+                            Login
+                        </a>
+                        <a href="{{ route('student.register') }}" class="px-6 py-2 bg-gradient-to-r from-primary-green to-primary-blue text-white rounded-full font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
+                            Get Started
+                        </a>
+                    @endauth
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-button" class="md:hidden text-gray-700 hover:text-primary-green transition-colors">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
             </div>
             
-            <button class="mobile-menu-btn">
-                <i class="fas fa-bars"></i>
-            </button>
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+                <div class="px-4 py-4 space-y-3">
+                    <a href="#home" class="block px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-primary-green rounded-lg font-medium transition-colors">
+                        <i class="fas fa-home mr-2"></i>Home
+                    </a>
+                    <a href="#features" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary-blue rounded-lg font-medium transition-colors">
+                        <i class="fas fa-star mr-2"></i>Features
+                    </a>
+                    <a href="#benefits" class="block px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-primary-green rounded-lg font-medium transition-colors">
+                        <i class="fas fa-check-circle mr-2"></i>Benefits
+                    </a>
+                    @auth
+                        @if(auth()->user()->hasRole('student'))
+                            <a href="{{ route('siwes.dashboard') }}" class="block px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-primary-green rounded-lg font-medium transition-colors">
+                                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                            </a>
+                        @elseif(auth()->user()->hasRole('supervisor'))
+                            <a href="{{ route('supervisor.siwes-approvals') }}" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary-blue rounded-lg font-medium transition-colors">
+                                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                            </a>
+                        @elseif(auth()->user()->hasRole('superadmin'))
+                            <a href="{{ route('superadmin.dashboard') }}" class="block px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-primary-green rounded-lg font-medium transition-colors">
+                                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                            </a>
+                        @endif
+                    @endauth
+                    
+                    <div class="pt-3 border-t border-gray-100 space-y-2">
+                        @auth
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full px-4 py-2 text-primary-green border-2 border-primary-green rounded-lg font-semibold hover:bg-primary-green hover:text-white transition-all duration-300">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </button>
+                            </form>
+                        @else
+                            <a href="{{ route('login') }}" class="block px-4 py-2 text-center text-primary-blue border-2 border-primary-blue rounded-lg font-semibold hover:bg-primary-blue hover:text-white transition-all duration-300">
+                                <i class="fas fa-sign-in-alt mr-2"></i>Login
+                            </a>
+                            <a href="{{ route('student.register') }}" class="block px-4 py-2 text-center bg-gradient-to-r from-primary-green to-primary-blue text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300">
+                                <i class="fas fa-rocket mr-2"></i>Get Started
+                            </a>
+                        @endauth
+                    </div>
+                </div>
+            </div>
         </nav>
     </header>
 
     <!-- Hero Section -->
-    <section class="hero" id="home" style="padding-top: 40px">
-        <div class="hero-container">
-            <div class="hero-content">
-                <h1>Transforming Industrial Training into Smart Digital Experience</h1>
-                <p>Record, Track, and Verify your SIWES journey with real-time supervision, geolocation, and offline accessibility.</p>
-                <div class="hero-buttons">
-                    <a href="{{ route('student.register') }}" class="btn-hero-primary">Get Started</a>
-                    <a href="{{ route('login') }}" class="btn-hero-secondary">Login as Student / Supervisor</a>
-                </div>
-            </div>
-            
-            <div class="hero-illustration">
-                <div class="floating-shape shape-1"></div>
-                <div class="floating-shape shape-2"></div>
-                <div class="floating-shape shape-3"></div>
-                
-                <div class="mockup-container">
-                    <div class="mockup-screen">
-                        <div class="mockup-header">
-                            <div class="mockup-dot dot-red"></div>
-                            <div class="mockup-dot dot-yellow"></div>
-                            <div class="mockup-dot dot-green"></div>
+    <section id="home" class="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-blue-50 via-green-50 to-blue-100 pt-16">
+        <!-- Animated Background Elements -->
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute top-20 left-10 w-72 h-72 bg-primary-green/10 rounded-full blur-3xl animate-float"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-primary-blue/10 rounded-full blur-3xl animate-float-delayed"></div>
+        </div>
+        
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Hero Content -->
+                <div class="text-center lg:text-left space-y-8">
+                    <div class="inline-block">
+                        <span class="px-4 py-2 bg-gradient-to-r from-primary-green/10 to-primary-blue/10 text-primary-blue rounded-full text-sm font-semibold border border-primary-blue/20">
+                            <i class="fas fa-rocket mr-2"></i>Next-Gen SIWES Management
+                        </span>
+                    </div>
+                    
+                    <h1 class="text-5xl lg:text-6xl font-extrabold leading-tight">
+                        <span class="bg-gradient-to-r from-primary-green via-primary-blue to-primary-green bg-clip-text text-transparent">
+                            Transform Your
+                        </span>
+                        <br>
+                        <span class="text-gray-900">Industrial Training</span>
+                    </h1>
+                    
+                    <p class="text-xl text-gray-600 leading-relaxed max-w-2xl">
+                        Experience seamless SIWES documentation with real-time supervision, GPS verification, and secure cloud storage. Built for Nigerian students and supervisors.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <a href="{{ route('student.register') }}" class="px-8 py-4 bg-gradient-to-r from-primary-green to-dark-green text-white rounded-full font-bold text-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
+                            <i class="fas fa-user-graduate mr-2"></i>Start as Student
+                        </a>
+                        <a href="{{ route('login') }}" class="px-8 py-4 bg-white text-primary-blue border-2 border-primary-blue rounded-full font-bold text-lg hover:bg-primary-blue hover:text-white transition-all duration-300">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                        </a>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="grid grid-cols-3 gap-6 pt-8">
+                        <div class="text-center lg:text-left">
+                            <div class="text-3xl font-bold text-primary-green">100%</div>
+                            <div class="text-sm text-gray-600">Secure</div>
                         </div>
-                        <div class="mockup-content">
-                            <i class="fas fa-laptop" style="font-size: 3rem; color: var(--primary-green);"></i>
+                        <div class="text-center lg:text-left">
+                            <div class="text-3xl font-bold text-primary-blue">24/7</div>
+                            <div class="text-sm text-gray-600">Access</div>
+                        </div>
+                        <div class="text-center lg:text-left">
+                            <div class="text-3xl font-bold text-primary-green">GPS</div>
+                            <div class="text-sm text-gray-600">Verified</div>
                         </div>
                     </div>
+                </div>
+                
+                <!-- Hero Illustration -->
+                <div class="relative hidden lg:block">
+                    <div class="relative z-10">
+                        <div class="bg-white rounded-3xl shadow-2xl p-8 transform hover:scale-105 transition-transform duration-500">
+                            <div class="flex items-center space-x-2 mb-6">
+                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="h-4 bg-gradient-to-r from-primary-green to-primary-blue rounded w-3/4"></div>
+                                <div class="h-4 bg-gray-200 rounded w-full"></div>
+                                <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                                <div class="grid grid-cols-2 gap-4 mt-6">
+                                    <div class="h-24 bg-gradient-to-br from-primary-green/20 to-primary-green/5 rounded-xl flex items-center justify-center">
+                                        <i class="fas fa-map-marker-alt text-3xl text-primary-green"></i>
+                                    </div>
+                                    <div class="h-24 bg-gradient-to-br from-primary-blue/20 to-primary-blue/5 rounded-xl flex items-center justify-center">
+                                        <i class="fas fa-shield-alt text-3xl text-primary-blue"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Floating Elements -->
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-primary-blue/20 rounded-full blur-2xl animate-float"></div>
+                    <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-primary-green/20 rounded-full blur-2xl animate-float-delayed"></div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="features-container">
-            <h2 class="section-title">Why Choose LogX?</h2>
-            <p class="section-subtitle">Experience the future of industrial training documentation with our cutting-edge features designed for students and supervisors.</p>
+    <section id="features" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
+                    Powerful Features for
+                    <span class="bg-gradient-to-r from-primary-green to-primary-blue bg-clip-text text-transparent">Modern SIWES</span>
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Everything you need to manage your industrial training efficiently and securely
+                </p>
+            </div>
             
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-map-marker-alt"></i>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="group bg-gradient-to-br from-green-50 to-white p-8 rounded-2xl border-2 border-transparent hover:border-primary-green transition-all duration-300 hover:shadow-xl">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary-green to-dark-green rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-map-marker-alt text-2xl text-white"></i>
                     </div>
-                    <h3>Geo-Verified Logs</h3>
-                    <p>Log your activities only from your real PPA location with GPS verification, ensuring authenticity and preventing fraudulent entries.</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">GPS Verification</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Log activities only from your actual PPA location. Our advanced GPS system ensures authenticity and prevents fraudulent entries.
+                    </p>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-shield-alt"></i>
+                <!-- Feature 2 -->
+                <div class="group bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl border-2 border-transparent hover:border-primary-blue transition-all duration-300 hover:shadow-xl">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary-blue to-dark-blue rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-shield-alt text-2xl text-white"></i>
                     </div>
-                    <h3>2FA Security</h3>
-                    <p>Protect your account with two-factor authentication, ensuring your logbook data remains secure and accessible only to you.</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">2FA Security</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Bank-level security with two-factor authentication. Your logbook data stays protected and accessible only to authorized users.
+                    </p>
                 </div>
                 
-                {{-- <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-wifi"></i>
+                <!-- Feature 3 -->
+                <div class="group bg-gradient-to-br from-green-50 to-white p-8 rounded-2xl border-2 border-transparent hover:border-primary-green transition-all duration-300 hover:shadow-xl">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary-green to-dark-green rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-clock text-2xl text-white"></i>
                     </div>
-                    <h3>Offline Sync</h3>
-                    <p>Record your logs even without internet connection. Data automatically syncs when you're back online, ensuring no entry is lost.</p>
-                </div> --}}
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Real-Time Tracking</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Supervisors can monitor student progress in real-time. Instant notifications for submissions and approvals.
+                    </p>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="group bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl border-2 border-transparent hover:border-primary-blue transition-all duration-300 hover:shadow-xl">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary-blue to-dark-blue rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-file-alt text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Digital Reports</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Generate comprehensive reports automatically. Export to PDF with professional formatting and institutional branding.
+                    </p>
+                </div>
+                
+                <!-- Feature 5 -->
+                <div class="group bg-gradient-to-br from-green-50 to-white p-8 rounded-2xl border-2 border-transparent hover:border-primary-green transition-all duration-300 hover:shadow-xl">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary-green to-dark-green rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-users text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Multi-Role Access</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Separate dashboards for students, supervisors, and administrators. Role-based permissions for enhanced security.
+                    </p>
+                </div>
+                
+                <!-- Feature 6 -->
+                <div class="group bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl border-2 border-transparent hover:border-primary-blue transition-all duration-300 hover:shadow-xl">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary-blue to-dark-blue rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-chart-line text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Analytics Dashboard</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Track your progress with visual analytics. View weekly summaries, activity trends, and performance metrics.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section id="benefits" class="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-6">
+                        Why Students & Supervisors
+                        <span class="bg-gradient-to-r from-primary-green to-primary-blue bg-clip-text text-transparent">Love {{ config('app.name', 'GeoLog') }}</span>
+                    </h2>
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-primary-green rounded-xl flex items-center justify-center">
+                                <i class="fas fa-check text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">No More Paper Logbooks</h3>
+                                <p class="text-gray-600">Say goodbye to lost or damaged physical logbooks. Everything is securely stored in the cloud.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-primary-blue rounded-xl flex items-center justify-center">
+                                <i class="fas fa-check text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">Instant Supervisor Feedback</h3>
+                                <p class="text-gray-600">Get real-time comments and approvals from your supervisor without physical meetings.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-primary-green rounded-xl flex items-center justify-center">
+                                <i class="fas fa-check text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">Verified Authenticity</h3>
+                                <p class="text-gray-600">GPS verification ensures all entries are genuine and made from your actual workplace.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-primary-blue rounded-xl flex items-center justify-center">
+                                <i class="fas fa-check text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">Easy Report Generation</h3>
+                                <p class="text-gray-600">Generate professional final reports with one click. Export to PDF for submission.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <div class="bg-white rounded-3xl shadow-2xl p-8">
+                        <div class="space-y-6">
+                            <div class="flex items-center space-x-4 p-4 bg-green-50 rounded-xl">
+                                <div class="w-12 h-12 bg-primary-green rounded-full flex items-center justify-center">
+                                    <i class="fas fa-graduation-cap text-white"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-gray-900">Student Dashboard</div>
+                                    <div class="text-sm text-gray-600">Log activities & track progress</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-4 p-4 bg-blue-50 rounded-xl">
+                                <div class="w-12 h-12 bg-primary-blue rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user-tie text-white"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-gray-900">Supervisor Portal</div>
+                                    <div class="text-sm text-gray-600">Review & approve submissions</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-4 p-4 bg-green-50 rounded-xl">
+                                <div class="w-12 h-12 bg-primary-green rounded-full flex items-center justify-center">
+                                    <i class="fas fa-shield-alt text-white"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-gray-900">Secure & Private</div>
+                                    <div class="text-sm text-gray-600">2FA & encrypted storage</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 bg-gradient-to-r from-primary-green via-primary-blue to-primary-green">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-4xl lg:text-5xl font-extrabold text-white mb-6">
+                Ready to Digitalize Your SIWES?
+            </h2>
+            <p class="text-xl text-white/90 mb-10 max-w-2xl mx-auto">
+                Join hundreds of students and supervisors already using {{ config('app.name', 'GeoLog') }} for seamless industrial training management.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{{ route('student.register') }}" class="px-10 py-4 bg-white text-primary-green rounded-full font-bold text-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
+                    <i class="fas fa-rocket mr-2"></i>Get Started Free
+                </a>
+                <a href="{{ route('login') }}" class="px-10 py-4 bg-transparent text-white border-2 border-white rounded-full font-bold text-lg hover:bg-white hover:text-primary-blue transition-all duration-300">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+                </a>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <div class="logo">
-                        <div class="logo-icon">
-                            <i class="fas fa-book"></i>
+    <footer id="contact" class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div class="col-span-2">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-primary-green to-primary-blue rounded-xl flex items-center justify-center">
+                            <i class="fas fa-book-open text-white"></i>
                         </div>
-                        <span style="color: white;">LogX</span>
+                        <span class="text-2xl font-bold">{{ config('app.name', 'GeoLog') }}</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">
+                        {{ config('app.name', 'GeoLog') }} - Smart Digital Logbook System for SIWES management. Built with care by students of BOUESTI.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary-green transition-colors">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary-blue transition-colors">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary-green transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
                     </div>
                 </div>
                 
-                <ul class="footer-links">
-                    <li><a href="#privacy">Privacy Policy</a></li>
-                    <li><a href="#support">Contact Support</a></li>
-                    <li><a href="#terms">Terms of Service</a></li>
-                </ul>
+                <div>
+                    <h3 class="font-bold text-lg mb-4">Quick Links</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#home" class="hover:text-primary-green transition-colors">Home</a></li>
+                        <li><a href="#features" class="hover:text-primary-blue transition-colors">Features</a></li>
+                        <li><a href="#benefits" class="hover:text-primary-green transition-colors">Benefits</a></li>
+                        <li><a href="{{ route('login') }}" class="hover:text-primary-blue transition-colors">Login</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="font-bold text-lg mb-4">Support</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-primary-green transition-colors">Help Center</a></li>
+                        <li><a href="#" class="hover:text-primary-blue transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-primary-green transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="hover:text-primary-blue transition-colors">Contact Us</a></li>
+                    </ul>
+                </div>
             </div>
             
-            <div class="footer-bottom">
-                <p>&copy; 2025 Smart Digital Logbook System (LogX). Built with 💖 by Students of BOUESTI.</p>
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+                <p>&copy; {{ date("Y") }} {{ config('app.name', 'GeoLog') }} - Smart Digital Logbook System. Built with <i class="fas fa-heart text-red-500"></i> by Students of BOUESTI.</p>
             </div>
         </div>
     </footer>
 
     <script>
-        // Add smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                    const icon = mobileMenuButton.querySelector('i');
+                    if (mobileMenu.classList.contains('hidden')) {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    } else {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    }
+                });
+                
+                // Close mobile menu when clicking on a link
+                document.querySelectorAll('#mobile-menu a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        mobileMenu.classList.add('hidden');
+                        const icon = mobileMenuButton.querySelector('i');
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
                     });
-                }
-            });
-        });
-
-        // Header scroll effect
-        window.addEventListener('scroll', function() {
-            const header = document.querySelector('.header');
-            if (window.scrollY > 100) {
-                header.style.background = 'rgba(255, 255, 255, 0.98)';
-                header.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
-            } else {
-                header.style.background = 'rgba(255, 255, 255, 0.95)';
-                header.style.boxShadow = 'none';
+                });
+                
+                // Close mobile menu on window resize
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth >= 768) {
+                        mobileMenu.classList.add('hidden');
+                        const icon = mobileMenuButton.querySelector('i');
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                });
             }
-        });
+            
+            // Smooth scroll
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
 
-        // Add animation on scroll
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver(function(entries) {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
+            // Header scroll effect
+            window.addEventListener('scroll', () => {
+                const header = document.querySelector('header');
+                if (header && window.scrollY > 50) {
+                    header.classList.add('shadow-lg');
+                } else if (header) {
+                    header.classList.remove('shadow-lg');
                 }
             });
-        }, observerOptions);
-
-        // Observe feature cards
-        document.querySelectorAll('.feature-card').forEach(card => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(30px)';
-            card.style.transition = 'all 0.6s ease';
-            observer.observe(card);
         });
     </script>
 </body>

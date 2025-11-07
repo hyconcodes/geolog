@@ -130,7 +130,7 @@
     </div>
 
     <div class="footer">
-        <p>Generated on {{ $generatedAt->format('F j, Y \a\t g:i A') }} | LogX - Smart Digital Logbook System</p>
+        <p>Generated on {{ $generatedAt->format('F j, Y \a\t g:i A') }} | GeoLog - Smart Digital Logbook System</p>
     </div>
 </body>
 </html>

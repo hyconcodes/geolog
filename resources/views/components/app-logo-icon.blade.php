@@ -2,7 +2,7 @@
     <!-- Outer ring with glassmorphism effect -->
     <circle cx="24" cy="24" r="22" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
     
-    <!-- Main logo shape - stylized "L" for LogX -->
+    <!-- Main logo shape - stylized "L" for GeoLog -->
     <path fill="currentColor" opacity="0.9" d="M16 12 L16 32 L32 32 L32 28 L20 28 L20 12 Z"/>
     
     <!-- Accent dot for "X" -->
