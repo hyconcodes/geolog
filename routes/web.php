@@ -41,6 +41,11 @@ Route::view('superadmin/dashboard', 'superadmin-dashboard')
     ->middleware(['auth', 'verified', 'role:superadmin'])
     ->name('superadmin.dashboard');
 
+// hod Dashboard Route
+Route::view('hod/dashboard', 'hod-dashboard')
+    ->middleware(['auth', 'verified', 'role:hod'])
+    ->name('hod.dashboard');
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
@@ -102,6 +107,7 @@ Route::middleware(['auth', 'role:supervisor'])->prefix('supervisor')->name('supe
 Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')->group(function () {
     Volt::route('roles', 'admin.role-management')->name('roles');
     Volt::route('accounts', 'admin.account-management')->name('accounts');
+    Volt::route('users', 'admin.users.index')->name('users.index');
     Volt::route('supervisors', 'admin.supervisor-management')->name('supervisors');
     Volt::route('departments', 'admin.department-management')->name('departments');
     Volt::route('departments/{id}', 'admin.department-detail')->name('department.detail');
@@ -114,4 +120,10 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')-
         }
         return response()->file(Storage::disk('public')->path($student->final_report_path));
     })->name('view-student-report');
+});
+
+// HOD routes
+Route::middleware(['auth', 'role:hod'])->prefix('hod')->name('hod.')->group(function () {
+    // Allow HODs to access the same department detail component, limited to their department
+    Volt::route('departments/{id}', 'admin.department-detail')->name('department.detail');
 });

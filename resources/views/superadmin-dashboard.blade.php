@@ -243,31 +243,30 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div class="bg-white dark:bg-zinc-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">Supervisor Management</h3>
+                        <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">User Management</h3>
                         <div class="space-y-3">
-                            <a href="{{ route('admin.supervisors') }}" 
+                            <a href="{{ route('admin.users.index') }}" 
                                class="flex items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
                                 <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mr-3">
                                     <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="font-medium text-zinc-900 dark:text-zinc-100">Manage Supervisors</p>
-                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">View capacity and assignments</p>
+                                    <p class="font-medium text-zinc-900 dark:text-zinc-100">User Management</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Create, edit, and delete users</p>
                                 </div>
                             </a>
-                            
                             <a href="{{ route('admin.departments') }}" 
-                               class="flex items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
-                                <div class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mr-3">
-                                    <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="flex items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                                <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mr-3">
+                                    <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="font-medium text-zinc-900 dark:text-zinc-100">Department Details</p>
-                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">Manage student assignments</p>
+                                    <p class="font-medium text-zinc-900 dark:text-zinc-100">Department Management</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Manage academic departments</p>
                                 </div>
                             </a>
                         </div>

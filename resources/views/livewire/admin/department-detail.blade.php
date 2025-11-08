@@ -19,6 +19,14 @@ new class extends Component {
 
     public function mount($id)
     {
+        // If HOD, restrict access strictly to their own department
+        if (auth()->check() && auth()->user()->hasRole('hod')) {
+            $userDeptId = auth()->user()->department_id;
+            if ((int) $id !== (int) $userDeptId) {
+                abort(403, 'Unauthorized to access other departments');
+            }
+        }
+
         $this->departmentId = $id;
         $this->department = Department::with(['students', 'supervisors'])->findOrFail($id);
     }

@@ -13,6 +13,8 @@
             @php $dashboardRoute = 'superadmin.dashboard'; @endphp
             @elserole('supervisor')
             @php $dashboardRoute = 'supervisor.dashboard'; @endphp
+            @elserole('hod')
+            @php $dashboardRoute = 'hod.dashboard'; @endphp
         @else
             @php $dashboardRoute = 'student.dashboard'; @endphp
         @endrole
@@ -24,7 +26,7 @@
         <flux:navlist variant="outline">
             <flux:navlist.group :heading="__('Platform')" class="grid">
                 <flux:navlist.item icon="home" :href="route($dashboardRoute)"
-                    :current="request()->routeIs(['student.dashboard', 'supervisor.dashboard', 'superadmin.dashboard'])"
+                    :current="request()->routeIs(['student.dashboard', 'supervisor.dashboard', 'superadmin.dashboard', 'hod.dashboard'])"
                     wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
             </flux:navlist.group>
 
@@ -81,6 +83,9 @@
                     <flux:navlist.item icon="users" :href="route('admin.accounts')"
                         :current="request()->routeIs('admin.accounts')" wire:navigate>{{ __('Account Management') }}
                     </flux:navlist.item>
+                    <flux:navlist.item icon="users" :href="route('admin.users.index')"
+                        :current="request()->routeIs('admin.users.index')" wire:navigate>{{ __('Manage Admin') }}
+                    </flux:navlist.item>
                     <flux:navlist.item icon="academic-cap" :href="route('admin.supervisors')"
                         :current="request()->routeIs('admin.supervisors')" wire:navigate>{{ __('Supervisor Management') }}
                     </flux:navlist.item>
@@ -91,6 +96,14 @@
                         :current="request()->routeIs('admin.student-reports')" wire:navigate>{{ __('Student Reports') }}
                     </flux:navlist.item>
                 </flux:navlist.group>
+            @endrole
+
+            @role('hod')
+                {{-- <flux:navlist.group :heading="__('Administration')" class="grid"> --}}
+                    <flux:navlist.item icon="building-office" :href="route('hod.department.detail', Auth::user()->department_id)"
+                        :current="request()->routeIs('hod.department.detail', Auth::user()->department_id)" wire:navigate>{{ __('Supervisor assignment') }}
+                    </flux:navlist.item>
+                {{-- </flux:navlist.group> --}}
             @endrole
         </flux:navlist>
 

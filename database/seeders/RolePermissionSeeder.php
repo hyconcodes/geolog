@@ -116,6 +116,24 @@ class RolePermissionSeeder extends Seeder
             'report.view',
         ]);
 
+        // hod role
+        $hodRole = Role::firstOrCreate(['name' => 'hod']);
+        $hodRole->syncPermissions([
+            'dashboard.view',
+            'user.view',
+            'siwes.activity.view',
+            'siwes.activity.approve',
+            'siwes.activity.reject',
+            'siwes.activity.history',
+            'siwes.student.view',
+            'siwes.supervisor.approvals',
+            'siwes.supervisor.students',
+            'siwes.summary.view',
+            'report.view',
+            'department.view',
+            'department.manage',
+        ]);
+
         // Superadmin role
         $superadminRole = Role::firstOrCreate(['name' => 'superadmin']);
         $superadminRole->syncPermissions(Permission::all());

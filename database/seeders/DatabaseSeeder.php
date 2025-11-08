@@ -21,10 +21,12 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
-            AdminSeeder::class,
+            // Seed roles & permissions first so role assignments work
+            RolePermissionSeeder::class,
+            // Then create core users and domain data
+            // AdminSeeder::class,
             DepartmentSeeder::class,
             DepartmentUsersSeeder::class,
-            RolePermissionSeeder::class,
             SupervisorSeeder::class,
         ]);
     }
